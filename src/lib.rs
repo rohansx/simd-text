@@ -121,7 +121,7 @@ mod tests {
     fn end_to_end_base64_roundtrip() {
         let original = b"Hello, SIMD world! 1234567890";
         let mut encoded = vec![0u8; original.len() * 2];
-        let enc_len = base64_encode(original, &mut encoded);
+        let enc_len = base64_encode(original, &mut encoded).unwrap();
         encoded.truncate(enc_len);
 
         let mut decoded = vec![0u8; encoded.len()];

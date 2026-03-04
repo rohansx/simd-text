@@ -73,7 +73,7 @@ fn bench_base64(c: &mut Criterion) {
         let mut output = vec![0u8; size * 2];
         group.throughput(Throughput::Bytes(size as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), &data, |b, data| {
-            b.iter(|| simd_text::base64_encode(data, &mut output))
+            b.iter(|| simd_text::base64_encode(data, &mut output).unwrap())
         });
     }
 

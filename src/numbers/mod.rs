@@ -333,4 +333,45 @@ mod tests {
     fn extract_numbers_empty() {
         assert!(extract_numbers(b"no numbers here").is_empty());
     }
+
+    #[test]
+    fn parse_error_display() {
+        let err = ParseError { kind: ParseErrorKind::Empty, position: 0 };
+        assert!(err.to_string().contains("empty"));
+
+        let err = ParseError { kind: ParseErrorKind::InvalidDigit, position: 3 };
+        assert!(err.to_string().contains("position 3"));
+
+        let err = ParseError { kind: ParseErrorKind::Overflow, position: 5 };
+        assert!(err.to_string().contains("overflow"));
+
+        let err = ParseError { kind: ParseErrorKind::InvalidFloat, position: 0 };
+        assert!(err.to_string().contains("invalid float"));
+    }
+
+    #[test]
+    fn parse_whitespace_only() {
+        let err = parse_integer::<u32>(b"   ").unwrap_err();
+        assert_eq!(err.kind, ParseErrorKind::Empty);
+    }
+
+    #[test]
+    fn parse_bare_sign() {
+        let err = parse_integer::<i32>(b"+").unwrap_err();
+        assert_eq!(err.kind, ParseErrorKind::InvalidDigit);
+
+        let err = parse_integer::<i32>(b"-").unwrap_err();
+        assert_eq!(err.kind, ParseErrorKind::InvalidDigit);
+    }
+
+    #[test]
+    fn extract_numbers_empty_input() {
+        assert!(extract_numbers(b"").is_empty());
+    }
+
+    #[test]
+    fn parse_leading_zeros() {
+        let v: u32 = parse_integer(b"007").unwrap();
+        assert_eq!(v, 7);
+    }
 }

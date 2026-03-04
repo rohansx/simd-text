@@ -48,34 +48,60 @@ pub(crate) fn decode_scalar(input: &[u8], output: &mut [u8]) -> Result<usize, De
     if len == 0 {
         return Ok(0);
     }
-    if len % 4 != 0 {
-        return Err(DecodeError {
-            position: len,
+
+    // Handle non-padded input by computing the "effective" padded length
+    // and how many trailing characters we have.
+    //
+    // Valid lengths modulo 4:
+    //   0 -> full groups, no remainder
+    //   2 -> 1 output byte from the trailing group
+    //   3 -> 2 output bytes from the trailing group
+    //   1 -> invalid (a single base64 char only gives 6 bits, not enough for a byte)
+    let remainder = len % 4;
+    if remainder == 1 {
+        return Err(DecodeError::InvalidLength { length: len });
+    }
+
+    // Calculate required output size
+    let full_groups = len / 4;
+    let needed = full_groups * 3 + match remainder {
+        2 => 1,
+        3 => 2,
+        _ => 0,
+    };
+
+    if output.len() < needed {
+        return Err(DecodeError::OutputTooSmall {
+            needed,
+            actual: output.len(),
         });
     }
 
     let mut oi = 0;
     let mut i = 0;
 
-    while i < len {
+    // Process full 4-byte groups
+    let full_end = full_groups * 4;
+    while i < full_end {
         let a = decode_byte(input[i], i)?;
         let b = decode_byte(input[i + 1], i + 1)?;
 
         if input[i + 2] == b'=' {
-            // Last group, 1 output byte
+            // Padded: last group, 1 output byte
             output[oi] = (a << 2) | (b >> 4);
             oi += 1;
-            break;
+            // Remaining is padding, we're done
+            return Ok(oi);
         }
 
         let c = decode_byte(input[i + 2], i + 2)?;
 
         if input[i + 3] == b'=' {
-            // Last group, 2 output bytes
+            // Padded: last group, 2 output bytes
             output[oi] = (a << 2) | (b >> 4);
             output[oi + 1] = (b << 4) | (c >> 2);
             oi += 2;
-            break;
+            return Ok(oi);
         }
 
         let d = decode_byte(input[i + 3], i + 3)?;
@@ -87,16 +113,29 @@ pub(crate) fn decode_scalar(input: &[u8], output: &mut [u8]) -> Result<usize, De
         i += 4;
     }
 
+    // Handle unpadded trailing characters (remainder == 2 or 3)
+    if remainder == 2 {
+        let a = decode_byte(input[i], i)?;
+        let b = decode_byte(input[i + 1], i + 1)?;
+        output[oi] = (a << 2) | (b >> 4);
+        oi += 1;
+    } else if remainder == 3 {
+        let a = decode_byte(input[i], i)?;
+        let b = decode_byte(input[i + 1], i + 1)?;
+        let c = decode_byte(input[i + 2], i + 2)?;
+        output[oi] = (a << 2) | (b >> 4);
+        output[oi + 1] = (b << 4) | (c >> 2);
+        oi += 2;
+    }
+
     Ok(oi)
 }
 
 fn decode_byte(b: u8, pos: usize) -> Result<u8, DecodeError> {
     let v = DECODE_TABLE[b as usize];
-    if v == 0xFF {
-        Err(DecodeError { position: pos })
-    } else if v == 0xFE {
-        // Padding — shouldn't reach here via decode_byte for data chars
-        Err(DecodeError { position: pos })
+    if v >= 0xFE {
+        // 0xFF = invalid byte, 0xFE = padding char '=' in a data position
+        Err(DecodeError::InvalidByte { position: pos })
     } else {
         Ok(v)
     }

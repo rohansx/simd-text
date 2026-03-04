@@ -36,6 +36,14 @@ impl CharClassifier {
     ///
     /// Only ASCII bytes (0-127) are supported. Non-ASCII bytes in the
     /// input set are silently ignored.
+    ///
+    /// An empty `chars` slice is valid and creates a classifier that
+    /// matches nothing (i.e., `find_all` always returns an empty `Vec`).
+    ///
+    /// If more than 8 unique nibble-pair classes are needed, the
+    /// classifier degrades gracefully but remains correct (it may
+    /// produce false-positive matches that are filtered by the scalar
+    /// fallback path).
     pub fn new(chars: &[u8]) -> Self {
         // Build nibble lookup tables
         // For each character, set a bit in both the low-nibble and high-nibble tables
@@ -149,6 +157,20 @@ mod tests {
     fn empty_input() {
         let c = CharClassifier::new(b" ");
         assert!(c.find_all(b"").is_empty());
+    }
+
+    #[test]
+    fn empty_char_set() {
+        let c = CharClassifier::new(b"");
+        assert!(c.find_all(b"hello world 123!@#").is_empty());
+    }
+
+    #[test]
+    fn non_ascii_chars_ignored() {
+        // Non-ASCII bytes in the char set should be silently ignored
+        let c = CharClassifier::new(&[0xFF, 0x80, b'x']);
+        let data = b"axbxc";
+        assert_eq!(c.find_all(data), vec![1, 3]);
     }
 
     #[test]

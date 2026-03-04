@@ -69,9 +69,10 @@ impl PipelineBuilder {
 
     /// Build the pipeline.
     pub fn build(self) -> Pipeline {
+        let has_classify = self.stages.iter().any(|s| matches!(s, Stage::Classify));
         Pipeline {
             stages: self.stages,
-            classifier: if !self.classify_chars.is_empty() {
+            classifier: if has_classify {
                 Some(crate::classify::CharClassifier::new(&self.classify_chars))
             } else {
                 None
@@ -197,5 +198,24 @@ mod tests {
         let data = b"x=42 y=3.14";
         let results = pipe.process(data);
         assert_eq!(results.numbers.len(), 2);
+    }
+
+    #[test]
+    fn pipeline_classify_empty_chars() {
+        let pipe = pipeline().classify(b"").build();
+        let data = b"hello world";
+        let results = pipe.process(data);
+        assert!(results.classifications.is_empty());
+    }
+
+    #[test]
+    fn pipeline_no_stages() {
+        let pipe = pipeline().build();
+        let data = b"hello";
+        let results = pipe.process(data);
+        assert!(results.utf8_valid); // default true when not validated
+        assert!(results.lines.is_empty());
+        assert!(results.classifications.is_empty());
+        assert!(results.numbers.is_empty());
     }
 }

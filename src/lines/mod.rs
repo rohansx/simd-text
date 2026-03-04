@@ -90,6 +90,10 @@ impl<'a> Iterator for LineRanges<'a> {
 ///
 /// Reads from an `impl Read` source and yields lines one at a time
 /// without loading the entire input into memory.
+///
+/// **Note:** I/O errors during reading are treated as EOF. If you need
+/// to distinguish between EOF and read errors, use a buffered reader
+/// with explicit error handling instead.
 #[cfg(feature = "std")]
 pub struct LineScanner<R: std::io::Read> {
     reader: R,

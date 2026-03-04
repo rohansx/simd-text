@@ -159,4 +159,18 @@ mod tests {
         let err = validate_utf8(&data).unwrap_err();
         assert_eq!(err.valid_up_to, 100);
     }
+
+    #[test]
+    fn error_display() {
+        let err = Utf8Error { valid_up_to: 42 };
+        let msg = err.to_string();
+        assert!(msg.contains("42"));
+        assert!(msg.contains("invalid UTF-8"));
+    }
+
+    #[test]
+    fn validate_and_split_empty() {
+        let offsets = validate_and_split_lines(b"").unwrap();
+        assert!(offsets.is_empty());
+    }
 }

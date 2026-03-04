@@ -1,0 +1,47 @@
+[package]
+name = "simd-text-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.simd-text]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_utf8_validate"
+path = "fuzz_targets/fuzz_utf8_validate.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_line_ranges"
+path = "fuzz_targets/fuzz_line_ranges.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_classify"
+path = "fuzz_targets/fuzz_classify.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_parse_integer"
+path = "fuzz_targets/fuzz_parse_integer.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_base64_roundtrip"
+path = "fuzz_targets/fuzz_base64_roundtrip.rs"
+doc = false
+
+[profile.release]
+debug = 1
+opt-level = 3

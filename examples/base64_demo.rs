@@ -10,7 +10,7 @@ fn main() {
     for msg in &messages {
         let input = msg.as_bytes();
         let mut encoded = vec![0u8; input.len() * 2];
-        let enc_len = base64_encode(input, &mut encoded);
+        let enc_len = base64_encode(input, &mut encoded).unwrap();
         let encoded = &encoded[..enc_len];
 
         let mut decoded = vec![0u8; encoded.len()];

@@ -47,6 +47,18 @@ for (start, end) in line_ranges(csv).skip(1) {
 | Number extraction | `extract_numbers()` | Scalar |
 | Fused pipeline | `pipeline().build()` | Per-stage |
 
+## Benchmarks
+
+Measured on x86_64 with AVX2 (Zen 4 / Raptor Lake class hardware):
+
+| Operation | Size | Throughput | Notes |
+|-----------|------|-----------|-------|
+| UTF-8 validation (AVX2) | 1 MiB | 45.6 GiB/s | Keiser-Lemire algorithm |
+| Line splitting (AVX2) | 1 MiB | 5.17 GiB/s | 32-byte newline scan |
+| Char classification (AVX2) | 1 MiB | 16.3 GiB/s | PSHUFB nibble lookup |
+| Base64 encode (scalar) | 256 KiB | 1.18 GiB/s | RFC 4648 standard |
+| Integer parsing | mixed | ~9 ns/number | 5 integers, mixed sizes |
+
 ## Pipeline API
 
 ```rust

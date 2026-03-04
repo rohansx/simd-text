@@ -33,6 +33,17 @@ for (start, end) in line_ranges(csv).skip(1) {
 }
 ```
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/placeholder.svg)](https://asciinema.org/a/placeholder)
+
+Run it locally:
+```sh
+./demo.sh
+# or replay the recording:
+asciinema play demo.cast
+```
+
 ## Features
 
 | Operation | Function | SIMD? |

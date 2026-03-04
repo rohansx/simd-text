@@ -1,0 +1,23 @@
+[package]
+name = "simd-text"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT OR Apache-2.0"
+description = "Unified SIMD text processing toolkit — UTF-8 validation, line splitting, character classification, number parsing, base64, and composable pipelines"
+repository = "https://github.com/rohansx/simd-text"
+keywords = ["simd", "text", "utf8", "parsing", "base64"]
+categories = ["text-processing", "parsing", "encoding", "no-std"]
+
+[features]
+default = ["std"]
+std = []
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+rand_xoshiro = "0.6"
+
+[[bench]]
+name = "throughput"
+harness = false
